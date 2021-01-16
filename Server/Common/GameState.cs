@@ -6,6 +6,7 @@
         Connecting,
         Connected,
         Sync,
+        Restarting,
         GameStarted
     }
 }

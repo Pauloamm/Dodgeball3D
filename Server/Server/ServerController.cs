@@ -26,7 +26,7 @@ namespace Server
 
 
             //Server Running
-            while(true)
+            while (true)
             {
                 // If new connection pending accepts it
                 if (tcpListener.Pending())
@@ -35,11 +35,13 @@ namespace Server
                     tcpListener.BeginAcceptTcpClient(AcceptTcpClient, tcpListener);
                 }
 
-
+                bool canRestart = false;
                 // Else checks for messages
                 foreach (Player PlayerToReadMessages in _playerList)
                 {
-                    switch(PlayerToReadMessages.GameState)
+
+                    if (canRestart) break;
+                    switch (PlayerToReadMessages.GameState)
                     {
                         case GameState.Connecting:
                             if (PlayerToReadMessages.DataAvailable())
@@ -53,8 +55,8 @@ namespace Server
                                 {
                                     Message msg = new Message();
                                     msg.MessageType = MessageType.NewPlayer;
-                                    msg.Description = (notifyPlayer == PlayerToReadMessages) ? 
-                                        "Successfully joined" : 
+                                    msg.Description = (notifyPlayer == PlayerToReadMessages) ?
+                                        "Successfully joined" :
                                         "Player " + PlayerToReadMessages.Name + " has joined";
                                     PlayerInfo playerInfo = new PlayerInfo();
                                     playerInfo.Id = PlayerToReadMessages.Id;
@@ -65,6 +67,7 @@ namespace Server
                                     playerInfo.directionX = 0;
                                     playerInfo.directionY = 0;
                                     playerInfo.directionZ = 0;
+                                    playerInfo.Score = 0;
                                     playerInfo.BallId = PlayerToReadMessages.BallId;
                                     msg.PlayerInfo = playerInfo;
 
@@ -92,6 +95,7 @@ namespace Server
                             PlayerInfo pi = new PlayerInfo();
                             pi.Id = PlayerToReadMessages.Id;
                             pi.BallId = PlayerToReadMessages.BallId;
+                            pi.Score = PlayerToReadMessages.Score;
 
                             messagePlayer.PlayerInfo = pi;
 
@@ -101,12 +105,12 @@ namespace Server
                             break;
 
 
-                            // Executes during game execution
+                        // Executes during game execution
                         case GameState.GameStarted:
-                            
+
                             if (PlayerToReadMessages.DataAvailable())
                             {
-                                
+
                                 // Reading message from player to re send to all others if is for that
                                 string msgJson = PlayerToReadMessages.BinaryReader.ReadString();
                                 Console.WriteLine(msgJson);
@@ -119,18 +123,31 @@ namespace Server
                                 if (message.MessageType == MessageType.PlayerMovement ||
                                     message.MessageType == MessageType.BallMovement ||
                                     message.MessageType == MessageType.ChangeTurn)
+
                                 {
                                     foreach (Player playerToSend in _playerList)
                                     {
                                         if (playerToSend.GameState == GameState.GameStarted) WriteMessageToPlayer(playerToSend, msgJson);
                                     }
                                 }
+                                else if (message.MessageType == MessageType.EndGame)
+                                {
+                                    foreach (Player playerToSend in _playerList)
+                                    {
+                                        if (playerToSend.GameState == GameState.GameStarted) WriteMessageToPlayer(playerToSend, msgJson);
+                                        playerToSend.GameState = GameState.Restarting;
+                                    }
+                                    canRestart = true;
+                                }
                             }
-
-                           
                             break;
+
+
+
                     }
                 }
+
+                if (canRestart) _playerList.Clear();
             }
         }
 
@@ -152,7 +169,7 @@ namespace Server
                 }
             }
 
-           
+
         }
 
         private void SyncNewPlayers(Player player)
@@ -193,6 +210,7 @@ namespace Server
                 player.BinaryWriter = new System.IO.BinaryWriter(tcpClient.GetStream());
                 player.Id = Guid.NewGuid();
                 player.BallId = Guid.NewGuid(); //
+                player.Score = 0;
 
 
                 player.GameState = GameState.Connecting;

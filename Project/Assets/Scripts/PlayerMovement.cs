@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float angle;
 
     //------------
-    public TcpClientController TcpClientController;
+    public TcpClientController tcpClientController;
 
     public bool Playable = false;
 
@@ -61,8 +61,8 @@ public class PlayerMovement : MonoBehaviour
             Message msg = new Message();
             msg.MessageType = MessageType.PlayerMovement;
             PlayerInfo info = new PlayerInfo();
-            info.Id = TcpClientController.Player.Id;
-            info.Name = TcpClientController.Player.Name;
+            info.Id = tcpClientController.Player.Id;
+            info.Name = tcpClientController.Player.Name;
 
 
             info.directionX = transform.rotation.eulerAngles.x;
@@ -73,7 +73,7 @@ public class PlayerMovement : MonoBehaviour
             info.Y = transform.position.y;
             info.Z = transform.position.z;
             msg.PlayerInfo = info;
-            TcpClientController.SendMessage(msg);
+            tcpClientController.SendMessage(msg);
         }
 
         _oldPosition = transform.position;

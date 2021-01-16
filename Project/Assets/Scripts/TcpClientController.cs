@@ -1,11 +1,13 @@
 ﻿using Common;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TcpClientController : MonoBehaviour
@@ -134,6 +136,9 @@ public class TcpClientController : MonoBehaviour
                     ballToMove.transform.rotation = Quaternion.Euler(
                     message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
 
+                    _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
+
+
 
                     //if (message.PlayerInfo.ParentId == null) ballToMove.transform.parent = null;
                     //else
@@ -141,6 +146,33 @@ public class TcpClientController : MonoBehaviour
                     //    ballToMove.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
                     //}
 
+                }
+            }
+            else if (message.MessageType == MessageType.EndGame)
+            {
+                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
+                    message.PlayerInfo.Id != Player.Id)
+                {
+                    //_playerGameObjectDict[Player.Id].GetComponentInChildren<Text>().text = "You Lost";
+                    //_playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = "You WON";
+
+                    foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
+                    {
+                        if (client.Key != message.PlayerInfo.Id) _playerGameObjectDict[client.Key].GetComponentInChildren<Text>().text = "You Lost";
+                    }
+
+                    _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = "You WON";
+                    StartCoroutine(ReloadGame());
+                }
+                else
+                {
+                    foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
+                    {
+                        if (client.Key != Player.Id) _playerGameObjectDict[client.Key].GetComponentInChildren<Text>().text = "You Lost";
+                    }
+
+                    _playerGameObjectDict[Player.Id].GetComponentInChildren<Text>().text = "You WON";
+                    StartCoroutine(ReloadGame());
                 }
             }
             //else if (message.MessageType == MessageType.ChangeTurn)
@@ -226,6 +258,8 @@ public class TcpClientController : MonoBehaviour
                     ballToMove.transform.rotation = Quaternion.Euler(
                     message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
 
+                    _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
+
                     //if (message.PlayerInfo.ParentId == null) ballToMove.transform.parent = null;
                     //else
                     //{
@@ -260,16 +294,20 @@ public class TcpClientController : MonoBehaviour
                 ConnectionUI.SetActive(false);
                 GameObject playerGameObject =
                     Instantiate(PlayerPrefab, SpawPoint.transform.position, Quaternion.identity);
-                playerGameObject.GetComponent<PlayerMovement>().TcpClientController = this;
+                playerGameObject.GetComponent<PlayerMovement>().tcpClientController = this;
                 playerGameObject.GetComponent<PlayerMovement>().Playable = true;
                 playerGameObject.GetComponent<PlayerMovement>().enabled = true;
                 playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
                 playerGameObject.GetComponent<PlayerUiController>().PlayerName.text = Player.Name;
 
                 playerGameObject.GetComponentInChildren<Ball>().TcpClientController = this;
+                playerGameObject.GetComponentInChildren<Ball>().changeTurn = playerGameObject.GetComponentInChildren<ChangeTurn>();
+
                 playerGameObject.GetComponentInChildren<ChangeTurn>().tcpClientController = this;
+                playerGameObject.GetComponentInChildren<ChangeTurn>().myScore = playerGameObject.GetComponentInChildren<Text>();
 
 
+                playerGameObject.GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
 
                 Debug.Log(message.PlayerInfo);
 
@@ -360,5 +398,24 @@ public class TcpClientController : MonoBehaviour
         {
             Debug.Log("Client connection refused");
         }
+    }
+
+    IEnumerator ReloadGame()
+    {
+        yield return new WaitForSeconds(4f);
+
+        foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
+        {
+            Destroy(client.Value);
+        }
+        _playerGameObjectDict.Clear();
+        _balls.Clear();
+        Player.TcpClient.Close();
+        Player.TcpClient = new TcpClient();
+
+
+        Player.GameState = GameState.Disconnected;
+
+        ConnectionUI.SetActive(true);
     }
 }

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class ChangeTurn : MonoBehaviour
 {
@@ -15,6 +17,9 @@ public class ChangeTurn : MonoBehaviour
     public TcpClientController tcpClientController;
 
 
+    public Text myScore;
+    public int score;
+
 
     Guid currentPlayer;
     private readonly Vector3 ballOffset = new Vector3(1f, 0f, 0f);
@@ -23,39 +28,65 @@ public class ChangeTurn : MonoBehaviour
 
     void Awake()
     {
-
+        //score = 0;
+        //myScore.text = score.ToString();
         players = new Dictionary<Guid, PlayerMovement>();
 
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (score == 3)
+        {
+            Debug.Log("WIN CRL");
+
+            Message msg = new Message();
+            msg.MessageType = MessageType.EndGame;
+            PlayerInfo info = new PlayerInfo();
+            info.Id = tcpClientController.Player.Id;      // WINNER
+            info.Name = tcpClientController.Player.Name;  // WINNER
+
+            msg.PlayerInfo = info;
+            tcpClientController.SendMessage(msg);
+
+            score = -1;
+        }
+
 
     }
 
     void OnCollisionEnter(Collision Other)
     {
 
-        if (!ball.parentPlayer.GetComponent<PlayerMovement>().Playable) return;
+        if (!ball.parentPlayer.GetComponent<PlayerMovement>().Playable || score == 3) return;
 
-        if (Other.gameObject.CompareTag("Wall"))
+        if (Other.gameObject.CompareTag("Wall") || Other.gameObject.CompareTag("Ball"))
         {
             Debug.Log("bateu na puta da parede");
             ball.isGrabbed = true;
             GiveBallToNextPlayer();
         }
-        else if (Other.gameObject.CompareTag("Player"))
+        else if (Other.gameObject.CompareTag("Player") && Other.gameObject.transform != ball.parentPlayer)
         {
-            Other.gameObject.GetComponent<PlayerMovement>().PlayerHit();
+
+            if (!ball.isGrabbed)
+            {
+                score++;
+                ball.isGrabbed = true;
+            }
+            //Other.gameObject.GetComponent<PlayerMovement>().PlayerHit();
+            myScore.text = score.ToString();
             GiveBallToNextPlayer();
         }
     }
 
+    
+
     private void GiveBallToNextPlayer()
     {
-        
+
         ball.ResetPosition();
 
 

@@ -15,6 +15,8 @@ namespace Common
         public float Y { get; set; }
         public float Z { get; set; }
 
+        public int Score { get; set; }
+
         //--
         public float directionX { get; set; } // NOT USED
         public float directionY { get; set; }

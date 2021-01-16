@@ -11,7 +11,8 @@ namespace Common
         NewPlayer,
         PlayerMovement,
         BallMovement, //
-        ChangeTurn, //
+        ChangeTurn,  //
+        EndGame,    //
         FinishedSync,
         Information,
         Warning,

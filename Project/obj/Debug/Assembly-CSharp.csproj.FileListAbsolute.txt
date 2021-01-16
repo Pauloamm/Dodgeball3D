@@ -342,3 +342,7 @@ C:\Users\Luis\Desktop\MultiplayerUnityTCP\obj\Debug\Assembly-CSharp.csprojAssemb
 C:\Users\Luis\Desktop\MultiplayerUnityTCP\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
 C:\Users\Luis\Desktop\MultiplayerUnityTCP\obj\Debug\Assembly-CSharp.dll
 C:\Users\Luis\Desktop\MultiplayerUnityTCP\obj\Debug\Assembly-CSharp.pdb
+D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Project\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Project\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
+D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Project\obj\Debug\Assembly-CSharp.dll
+D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Project\obj\Debug\Assembly-CSharp.pdb

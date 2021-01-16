@@ -20,6 +20,8 @@ public class Ball : MonoBehaviour
     public Transform parentPlayer;
 
 
+    public ChangeTurn changeTurn;
+
     [SerializeField] private LayerMask wallLayer;
     // Start is called before the first frame update
     void Start()
@@ -64,6 +66,7 @@ public class Ball : MonoBehaviour
             PlayerInfo info = new PlayerInfo();
             info.Id = TcpClientController.Player.Id;
             info.BallId = BallId;
+            info.Score = changeTurn.score;
 
             if (isGrabbed)
             {
