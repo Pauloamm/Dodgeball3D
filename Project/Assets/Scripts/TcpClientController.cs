@@ -13,7 +13,15 @@ public class TcpClientController : MonoBehaviour
 
     [HideInInspector]
     public Player Player;
-    private Dictionary<Guid, GameObject> _playerGameObjectDict;
+    public static Guid PlayerID;
+    public Dictionary<Guid, GameObject> _balls;
+    public Dictionary<Guid?, GameObject> _playerGameObjectDict;
+
+
+    //[SerializeField] GameObject ball;
+
+    [SerializeField] ChangeTurn changeTurn;
+
 
     public GameObject SpawPoint;
     public GameObject PlayerPrefab;
@@ -25,9 +33,12 @@ public class TcpClientController : MonoBehaviour
     private void Awake()
     {
         Player = new Player();
-        _playerGameObjectDict = new Dictionary<Guid, GameObject>();
+        _balls = new Dictionary<Guid, GameObject>();
+        _playerGameObjectDict = new Dictionary<Guid?, GameObject>();
         Player.GameState = GameState.Disconnected;
         Player.TcpClient = new TcpClient();
+
+
     }
     void Start()
     {
@@ -75,25 +86,81 @@ public class TcpClientController : MonoBehaviour
                     new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z),
                     Quaternion.identity);
 
+
                 //playerGameObject.SetActive(true);
+
+
 
                 playerGameObject.GetComponent<PlayerUiController>().PlayerName.text =
                     message.PlayerInfo.Name;
+                playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
+
+
                 _playerGameObjectDict.Add(message.PlayerInfo.Id, playerGameObject);
+
+                playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
+                _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
+
+                playerGameObject.name = message.PlayerInfo.Id.ToString();
+                playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
+                //changeTurn.AddNewPlayer();
             }
             else if (message.MessageType == MessageType.PlayerMovement)
             {
                 if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
                     message.PlayerInfo.Id != Player.Id)
                 {
+
                     _playerGameObjectDict[message.PlayerInfo.Id].transform.position =
                         new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
 
                     _playerGameObjectDict[message.PlayerInfo.Id].transform.rotation = Quaternion.Euler(
                         message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-                        //new Vector3(message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
+                    //new Vector3(message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
                 }
             }
+            else if (message.MessageType == MessageType.BallMovement)
+            {
+                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
+                    message.PlayerInfo.Id != Player.Id)
+                {
+
+                    GameObject ballToMove = _balls[message.PlayerInfo.BallId];
+                    Debug.Log("nome da bola " + ballToMove.name + "ball id " + message.PlayerInfo.BallId);
+
+
+                    ballToMove.transform.position = new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
+
+                    ballToMove.transform.rotation = Quaternion.Euler(
+                    message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
+
+
+                    //if (message.PlayerInfo.ParentId == null) ballToMove.transform.parent = null;
+                    //else
+                    //{
+                    //    ballToMove.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
+                    //}
+
+                }
+            }
+            //else if (message.MessageType == MessageType.ChangeTurn)
+            //{
+
+            //    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
+            //        message.PlayerInfo.Id != Player.Id)
+            //    {
+            //        Debug.Log("vaitefoderpaulo");
+            //        ChangeTurn.isCurrentTurn = true;
+            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[Player.Id].transform);
+
+            //    }
+            //    else
+            //    {
+            //        ChangeTurn.isCurrentTurn = false;
+            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[message.PlayerInfo.Id].transform);
+
+            //    }
+            //}
         }
     }
 
@@ -110,17 +177,30 @@ public class TcpClientController : MonoBehaviour
                     new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z),
                     Quaternion.identity);
 
+
                 //playerGameObject.SetActive(true);
 
                 playerGameObject.GetComponent<PlayerUiController>().PlayerName.text
                     = message.PlayerInfo.Name;
+                playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
+
                 _playerGameObjectDict.Add(message.PlayerInfo.Id, playerGameObject);
+
+                playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
+                _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
+
+                playerGameObject.name = message.PlayerInfo.Id.ToString();
+                playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
+
+                //changeTurn.AddNewPlayer();
             }
             // processar messages PlayerMovement
             else if (message.MessageType == MessageType.PlayerMovement)
             {
                 if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id))
                 {
+                    Debug.Log("num" + _playerGameObjectDict.Count);
+
                     _playerGameObjectDict[message.PlayerInfo.Id].transform.position =
                         new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
 
@@ -131,6 +211,49 @@ public class TcpClientController : MonoBehaviour
                        message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
                 }
             }
+            //
+            else if (message.MessageType == MessageType.BallMovement)
+            {
+                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
+                    message.PlayerInfo.Id != Player.Id)
+                {
+
+                    GameObject ballToMove = _balls[message.PlayerInfo.BallId];
+
+
+                    ballToMove.transform.position = new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
+
+                    ballToMove.transform.rotation = Quaternion.Euler(
+                    message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
+
+                    //if (message.PlayerInfo.ParentId == null) ballToMove.transform.parent = null;
+                    //else
+                    //{
+                    //    //Guid temp = (Guid)message.PlayerInfo.ParentId;
+                    //    ballToMove.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
+
+                    //}
+
+                }
+            }
+            //else if (message.MessageType == MessageType.ChangeTurn)
+            //{
+            //    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
+            //        message.PlayerInfo.Id != Player.Id)
+            //    {
+            //        ChangeTurn.isCurrentTurn = true;
+            //        //ball.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
+            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[Player.Id].transform);
+
+            //    }else
+            //    {
+            //        ChangeTurn.isCurrentTurn = false;
+            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[message.PlayerInfo.Id].transform);
+
+            //    }
+            //}
+
+
             else if (message.MessageType == MessageType.FinishedSync)
             {
 
@@ -140,12 +263,25 @@ public class TcpClientController : MonoBehaviour
                 playerGameObject.GetComponent<PlayerMovement>().TcpClientController = this;
                 playerGameObject.GetComponent<PlayerMovement>().Playable = true;
                 playerGameObject.GetComponent<PlayerMovement>().enabled = true;
+                playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
                 playerGameObject.GetComponent<PlayerUiController>().PlayerName.text = Player.Name;
 
-                //----
-                //playerGameObject.SetActive(true);
-                //----
+                playerGameObject.GetComponentInChildren<Ball>().TcpClientController = this;
+                playerGameObject.GetComponentInChildren<ChangeTurn>().tcpClientController = this;
+
+
+
+                Debug.Log(message.PlayerInfo);
+
                 _playerGameObjectDict.Add(Player.Id, playerGameObject);
+
+                playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
+                _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
+
+                //
+                playerGameObject.name = message.PlayerInfo.Id.ToString();
+                playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
+                //
 
                 Player.GameState = GameState.GameStarted;
             }
@@ -169,6 +305,9 @@ public class TcpClientController : MonoBehaviour
             string playerJsonString = Player.BinaryReader.ReadString();
             Player player = JsonConvert.DeserializeObject<Player>(playerJsonString);
             Player.Id = player.Id;
+            //
+            PlayerID = Player.Id;
+            //
             Player.MessageList.Add(player.MessageList.FirstOrDefault());
             Player.Name = PlayerNameInputText.text;
 

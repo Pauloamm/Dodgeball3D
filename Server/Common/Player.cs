@@ -12,6 +12,7 @@ namespace Common
         public Player() { }
 
         public Guid Id { get; set; }
+        public Guid BallId { get; set; }
         public string Name { get; set; }
         public List<Message> MessageList { get; set; }
         [JsonIgnore]

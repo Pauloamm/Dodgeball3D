@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ball.cs" />
+    <Compile Include="BallInfo.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MessageType.cs" />

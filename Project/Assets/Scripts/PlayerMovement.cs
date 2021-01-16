@@ -20,9 +20,16 @@ public class PlayerMovement : MonoBehaviour
 
     //------------
     public TcpClientController TcpClientController;
-    public bool Playable;
+
+    public bool Playable = false;
 
     private Vector3 _oldPosition;
+
+    internal void PlayerHit()
+    {
+        throw new NotImplementedException();
+    }
+
     private Quaternion _oldRotation;
     //------------
 
@@ -57,6 +64,7 @@ public class PlayerMovement : MonoBehaviour
             info.Id = TcpClientController.Player.Id;
             info.Name = TcpClientController.Player.Name;
 
+
             info.directionX = transform.rotation.eulerAngles.x;
             info.directionY = transform.rotation.eulerAngles.y;
             info.directionZ = transform.rotation.eulerAngles.z;
@@ -81,16 +89,13 @@ public class PlayerMovement : MonoBehaviour
 
         MovementAndOrientationUpdate();
         
-        if(Input.GetMouseButtonUp(0)) TryThrow();
+        if(Input.GetMouseButtonDown(0)) TryThrow();
     }
 
     
 
     void MovementAndOrientationUpdate()
     {
-        
-
-
         Vector3 mousePoint = sceneCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,Input.mousePosition.y,sceneCamera.transform.position.y));
         mousePoint.y *= 0f;
         
@@ -99,38 +104,37 @@ public class PlayerMovement : MonoBehaviour
     
     void TryThrow()
     {
-       
             Ball ball = GetComponentInChildren<Ball>();
             ball?.ThrowBall();
-
     }
 
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.transform == ball.transform) canCatch = true;
-    }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.transform == ball.transform) canCatch = false;
-    }
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.transform == ball.transform) canCatch = true;
+    //}
 
-    private void OnTriggerStay(Collider other)
-    {
-        if (!Input.GetMouseButtonDown(0)) return; 
+    //private void OnTriggerExit(Collider other)
+    //{
+    //    if (other.transform == ball.transform) canCatch = false;
+    //}
+
+    //private void OnTriggerStay(Collider other)
+    //{
+    //    if (!Input.GetMouseButtonDown(0)) return; 
         
         
-        float angleToBall = Vector3.Angle(transform.forward, ball.transform.position-transform.position);
+    //    float angleToBall = Vector3.Angle(transform.forward, ball.transform.position-transform.position);
 
-        if (canCatch && angleToBall >= -angle / 2 && angleToBall <= angle / 2)
-        {
-            Debug.Log("CATCHED" + canCatch);
-            ball.GrabBall(this.transform);
-            canCatch = false;
-        }
+    //    if (canCatch && angleToBall >= -angle / 2 && angleToBall <= angle / 2)
+    //    {
+    //        Debug.Log("CATCHED" + canCatch);
+    //        ball.GrabBall(this.transform);
+    //        canCatch = false;
+    //    }
           
-    }
+    //}
 
 
     //-------------------------------------------------------------------
