@@ -29,12 +29,10 @@ namespace Server
             //Server Running
             while (true)
             {
-                // If new connection pending accepts it
                 if (tcpListener.Pending())
                 {
                     Console.WriteLine("New pending connection");
                     await  AsyncAcceptNewTCPClient(tcpListener);
-                    //tcpListener.BeginAcceptTcpClient(AcceptTcpClient, tcpListener);
                 }
 
                 bool canRestart = false;
