@@ -33,3 +33,12 @@ D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Common\obj\Debug\Common.csproj.CoreC
 D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Common\obj\Debug\Common.csproj.CopyComplete
 D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Common\obj\Debug\Common.dll
 D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Common\obj\Debug\Common.pdb
+D:\UnityProjects\Dodgeball3D\Server\Common\bin\Debug\Common.dll
+D:\UnityProjects\Dodgeball3D\Server\Common\bin\Debug\Common.pdb
+D:\UnityProjects\Dodgeball3D\Server\Common\bin\Debug\Newtonsoft.Json.dll
+D:\UnityProjects\Dodgeball3D\Server\Common\bin\Debug\Newtonsoft.Json.xml
+D:\UnityProjects\Dodgeball3D\Server\Common\obj\Debug\Common.csprojAssemblyReference.cache
+D:\UnityProjects\Dodgeball3D\Server\Common\obj\Debug\Common.csproj.CoreCompileInputs.cache
+D:\UnityProjects\Dodgeball3D\Server\Common\obj\Debug\Common.csproj.CopyComplete
+D:\UnityProjects\Dodgeball3D\Server\Common\obj\Debug\Common.dll
+D:\UnityProjects\Dodgeball3D\Server\Common\obj\Debug\Common.pdb

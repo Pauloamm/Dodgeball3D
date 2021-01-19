@@ -58,3 +58,15 @@ D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Server\obj\Debug\Server.csproj.CoreC
 D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Server\obj\Debug\Server.csproj.CopyComplete
 D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Server\obj\Debug\Server.exe
 D:\TEMPORARIAMENTE_REDES\Dodgeball3D\Server\Server\obj\Debug\Server.pdb
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Server.exe.config
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Server.exe
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Server.pdb
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Common.dll
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Newtonsoft.Json.dll
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Common.pdb
+D:\UnityProjects\Dodgeball3D\Server\Server\bin\Debug\Newtonsoft.Json.xml
+D:\UnityProjects\Dodgeball3D\Server\Server\obj\Debug\Server.csprojAssemblyReference.cache
+D:\UnityProjects\Dodgeball3D\Server\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
+D:\UnityProjects\Dodgeball3D\Server\Server\obj\Debug\Server.csproj.CopyComplete
+D:\UnityProjects\Dodgeball3D\Server\Server\obj\Debug\Server.exe
+D:\UnityProjects\Dodgeball3D\Server\Server\obj\Debug\Server.pdb

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Server
 {
@@ -18,7 +19,7 @@ namespace Server
             _playerList = new List<Player>();
         }
 
-        public void StartServer()
+        public async void StartServer()
         {
             TcpListener tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 7777);
             tcpListener.Start();
@@ -32,7 +33,8 @@ namespace Server
                 if (tcpListener.Pending())
                 {
                     Console.WriteLine("New pending connection");
-                    tcpListener.BeginAcceptTcpClient(AcceptTcpClient, tcpListener);
+                    await  AsyncAcceptNewTCPClient(tcpListener);
+                    //tcpListener.BeginAcceptTcpClient(AcceptTcpClient, tcpListener);
                 }
 
                 bool canRestart = false;
@@ -190,10 +192,12 @@ namespace Server
             }
         }
 
-        private void AcceptTcpClient(IAsyncResult ar)
+
+        private async Task AsyncAcceptNewTCPClient(TcpListener tcpListener)
         {
-            TcpListener tcpListener = (TcpListener)ar.AsyncState;
-            TcpClient tcpClient = tcpListener.EndAcceptTcpClient(ar);
+
+            TcpClient tcpClient =  await tcpListener.AcceptTcpClientAsync();
+
             if (tcpClient.Connected)
             {
                 Console.WriteLine("Accepted new connection");
@@ -226,6 +230,43 @@ namespace Server
                 Console.WriteLine("Connection refused");
             }
         }
+
+        //private void AcceptTcpClient(IAsyncResult ar)
+        //{
+        //    TcpListener tcpListener = (TcpListener)ar.AsyncState;
+        //    TcpClient tcpClient = tcpListener.EndAcceptTcpClient(ar);
+        //    if (tcpClient.Connected)
+        //    {
+        //        Console.WriteLine("Accepted new connection");
+
+        //        Player player = new Player();
+        //        Message message = new Message();
+        //        message.Description = "Hello new player";
+        //        message.MessageType = MessageType.Information;
+
+        //        player.MessageList = new List<Message>();
+        //        player.MessageList.Add(message);
+        //        player.TcpClient = tcpClient;
+        //        player.BinaryReader = new System.IO.BinaryReader(tcpClient.GetStream());
+        //        player.BinaryWriter = new System.IO.BinaryWriter(tcpClient.GetStream());
+        //        player.Id = Guid.NewGuid();
+        //        player.BallId = Guid.NewGuid(); //
+        //        player.Score = 0;
+
+
+        //        player.GameState = GameState.Connecting;
+
+        //        _playerList.Add(player);
+
+        //        string playerJson = JsonConvert.SerializeObject(player);
+        //        Console.WriteLine(playerJson);
+        //        player.BinaryWriter.Write(playerJson);
+        //    }
+        //    else
+        //    {
+        //        Console.WriteLine("Connection refused");
+        //    }
+        //}
 
 
 
