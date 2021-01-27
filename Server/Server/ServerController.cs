@@ -118,11 +118,9 @@ namespace Server
 
                                 Message message = JsonConvert.DeserializeObject<Message>(msgJson);
 
-                                // MANDAR MENSAGEM DE PLAYER INFO MAS COM ENUM DA MESSAGETYPE COM BALLMOVEMENT
-
+                                // Sends message to all Players
                                 if (message.MessageType == MessageType.PlayerMovement ||
-                                    message.MessageType == MessageType.BallMovement ||
-                                    message.MessageType == MessageType.ChangeTurn)
+                                    message.MessageType == MessageType.BallMovement)
 
                                 {
                                     foreach (Player playerToSend in _playerList)
@@ -137,16 +135,14 @@ namespace Server
                                         if (playerToSend.GameState == GameState.GameStarted) WriteMessageToPlayer(playerToSend, msgJson);
                                         playerToSend.GameState = GameState.Restarting;
                                     }
+                                    // So it can restart the Server
                                     canRestart = true;
                                 }
                             }
                             break;
-
-
-
                     }
                 }
-
+                // Clears the Server Info
                 if (canRestart) _playerList.Clear();
             }
         }
@@ -168,8 +164,6 @@ namespace Server
                     }
                 }
             }
-
-
         }
 
         private void SyncNewPlayers(Player player)
@@ -211,7 +205,7 @@ namespace Server
                 player.BinaryReader = new System.IO.BinaryReader(tcpClient.GetStream());
                 player.BinaryWriter = new System.IO.BinaryWriter(tcpClient.GetStream());
                 player.Id = Guid.NewGuid();
-                player.BallId = Guid.NewGuid(); //
+                player.BallId = Guid.NewGuid(); 
                 player.Score = 0;
 
 
@@ -228,47 +222,6 @@ namespace Server
                 Console.WriteLine("Connection refused");
             }
         }
-
-        //private void AcceptTcpClient(IAsyncResult ar)
-        //{
-        //    TcpListener tcpListener = (TcpListener)ar.AsyncState;
-        //    TcpClient tcpClient = tcpListener.EndAcceptTcpClient(ar);
-        //    if (tcpClient.Connected)
-        //    {
-        //        Console.WriteLine("Accepted new connection");
-
-        //        Player player = new Player();
-        //        Message message = new Message();
-        //        message.Description = "Hello new player";
-        //        message.MessageType = MessageType.Information;
-
-        //        player.MessageList = new List<Message>();
-        //        player.MessageList.Add(message);
-        //        player.TcpClient = tcpClient;
-        //        player.BinaryReader = new System.IO.BinaryReader(tcpClient.GetStream());
-        //        player.BinaryWriter = new System.IO.BinaryWriter(tcpClient.GetStream());
-        //        player.Id = Guid.NewGuid();
-        //        player.BallId = Guid.NewGuid(); //
-        //        player.Score = 0;
-
-
-        //        player.GameState = GameState.Connecting;
-
-        //        _playerList.Add(player);
-
-        //        string playerJson = JsonConvert.SerializeObject(player);
-        //        Console.WriteLine(playerJson);
-        //        player.BinaryWriter.Write(playerJson);
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Connection refused");
-        //    }
-        //}
-
-
-
-
 
         private void WriteMessageToPlayer(Player playerToSend, string messageToSend) => playerToSend.BinaryWriter.Write(messageToSend);
     }

@@ -8,89 +8,53 @@ using UnityEngine.SceneManagement;
 
 public class ChangeTurn : MonoBehaviour
 {
-
-    //[SerializeField] PlayerMovement player_01;
-    //[SerializeField] PlayerMovement player_02;
     [SerializeField] Ball ball;
 
-    Dictionary<Guid, PlayerMovement> players;
     public TcpClientController tcpClientController;
-
-
     public Text myScore;
     public int score;
-
-
-    Guid currentPlayer;
-    private readonly Vector3 ballOffset = new Vector3(1f, 0f, 0f);
-
     public static bool isCurrentTurn;
-
-    void Awake()
-    {
-        //score = 0;
-        //myScore.text = score.ToString();
-        players = new Dictionary<Guid, PlayerMovement>();
-
-
-    }
 
     // Update is called once per frame
     void Update()
     {
-        if (score == 3)
-        {
-            Debug.Log("WIN CRL");
+        if (score != 3) return;
 
-            Message msg = new Message();
-            msg.MessageType = MessageType.EndGame;
-            PlayerInfo info = new PlayerInfo();
-            info.Id = tcpClientController.Player.Id;      // WINNER
-            info.Name = tcpClientController.Player.Name;  // WINNER
+        // Sends victory message to Server
+        Message msg = new Message();
+        msg.MessageType = MessageType.EndGame;
+        PlayerInfo info = new PlayerInfo();
+        info.Id = tcpClientController.Player.Id;      // WINNER
+        info.Name = tcpClientController.Player.Name;  // WINNER
 
-            msg.PlayerInfo = info;
-            tcpClientController.SendMessage(msg);
+        msg.PlayerInfo = info;
+        tcpClientController.SendMessage(msg);
 
-            score = -1;
-        }
-
-
+        score = -1;
     }
 
+    // Checks when ball hits
     void OnCollisionEnter(Collision Other)
     {
-
+        // Verifies if player is Playable and if the game isn't over
         if (!ball.parentPlayer.GetComponent<PlayerMovement>().Playable || score == 3) return;
 
+        // Checks if hits Wall or another Ball
         if (Other.gameObject.CompareTag("Wall") || Other.gameObject.CompareTag("Ball"))
         {
-            Debug.Log("bateu na puta da parede");
             ball.isGrabbed = true;
-            GiveBallToNextPlayer();
+            ball.ResetPosition(); // Resets Ball's position
         }
+        // Checks if hits another Player
         else if (Other.gameObject.CompareTag("Player") && Other.gameObject.transform != ball.parentPlayer)
         {
-
             if (!ball.isGrabbed)
             {
                 score++;
                 ball.isGrabbed = true;
             }
-            //Other.gameObject.GetComponent<PlayerMovement>().PlayerHit();
             myScore.text = score.ToString();
-            GiveBallToNextPlayer();
+            ball.ResetPosition(); // Resets Ball's position
         }
-    }
-
-    
-
-    private void GiveBallToNextPlayer()
-    {
-
-        ball.ResetPosition();
-
-
-        Debug.Log("é a pouta da minha vez");
-
     }
 }

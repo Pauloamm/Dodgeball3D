@@ -10,6 +10,5 @@ namespace Common
         public string Description { get; set; }
         public PlayerInfo PlayerInfo { get; set; }
         public MessageType MessageType { get; set; }
-        public BallInfo BallInfo { get; set; }
     }
 }

@@ -9,32 +9,17 @@ public class PlayerMovement : MonoBehaviour
 {
 
     [SerializeField] private float movementSpeed;
-
     [SerializeField] private Camera sceneCamera;
-    // Start is called before the first frame update
 
-
-    private bool canCatch;
-    [SerializeField] Ball ball;
-    [SerializeField] private float angle;
-
-    //------------
-    public TcpClientController tcpClientController;
 
     public bool Playable = false;
-
+    public TcpClientController tcpClientController;
     private Vector3 _oldPosition;
-
-    internal void PlayerHit()
-    {
-        throw new NotImplementedException();
-    }
-
     private Quaternion _oldRotation;
-    //------------
-
-
     private Rigidbody playerRb;
+
+
+
     private void Awake()
     {
         playerRb = GetComponent<Rigidbody>();
@@ -47,7 +32,7 @@ public class PlayerMovement : MonoBehaviour
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
 
-
+        // Change Player position
         if (x != 0 || z != 0)
         {
             playerRb.position += Vector3.forward * (z * Time.deltaTime * movementSpeed);
@@ -55,34 +40,37 @@ public class PlayerMovement : MonoBehaviour
         }
         else playerRb.velocity = Vector3.zero;
 
-        //-----------------
-        if (transform.position != _oldPosition || transform.rotation != _oldRotation)
-        {
-            Message msg = new Message();
-            msg.MessageType = MessageType.PlayerMovement;
-            PlayerInfo info = new PlayerInfo();
-            info.Id = tcpClientController.Player.Id;
-            info.Name = tcpClientController.Player.Name;
+        
+        if (transform.position != _oldPosition || transform.rotation != _oldRotation) SendPlayerMovementMessage();
 
-
-            info.directionX = transform.rotation.eulerAngles.x;
-            info.directionY = transform.rotation.eulerAngles.y;
-            info.directionZ = transform.rotation.eulerAngles.z;
-
-            info.X = transform.position.x;
-            info.Y = transform.position.y;
-            info.Z = transform.position.z;
-            msg.PlayerInfo = info;
-            tcpClientController.SendMessage(msg);
-        }
 
         _oldPosition = transform.position;
         _oldRotation = transform.rotation;
-        //-----------------
 
     }
 
-    // Update is called once per frame
+
+    private void SendPlayerMovementMessage()
+    {
+        Message msg = new Message();
+        msg.MessageType = MessageType.PlayerMovement;
+        PlayerInfo info = new PlayerInfo();
+        info.Id = tcpClientController.Player.Id;
+        info.Name = tcpClientController.Player.Name;
+
+
+        info.directionX = transform.rotation.eulerAngles.x;
+        info.directionY = transform.rotation.eulerAngles.y;
+        info.directionZ = transform.rotation.eulerAngles.z;
+
+        info.X = transform.position.x;
+        info.Y = transform.position.y;
+        info.Z = transform.position.z;
+        msg.PlayerInfo = info;
+        tcpClientController.SendMessage(msg);
+    }
+
+
     void Update()
     {
         if (!Playable) return;
@@ -91,8 +79,6 @@ public class PlayerMovement : MonoBehaviour
         
         if(Input.GetMouseButtonDown(0)) TryThrow();
     }
-
-    
 
     void MovementAndOrientationUpdate()
     {
@@ -107,73 +93,4 @@ public class PlayerMovement : MonoBehaviour
             Ball ball = GetComponentInChildren<Ball>();
             ball?.ThrowBall();
     }
-
-
-
-    //private void OnTriggerEnter(Collider other)
-    //{
-    //    if (other.transform == ball.transform) canCatch = true;
-    //}
-
-    //private void OnTriggerExit(Collider other)
-    //{
-    //    if (other.transform == ball.transform) canCatch = false;
-    //}
-
-    //private void OnTriggerStay(Collider other)
-    //{
-    //    if (!Input.GetMouseButtonDown(0)) return; 
-        
-        
-    //    float angleToBall = Vector3.Angle(transform.forward, ball.transform.position-transform.position);
-
-    //    if (canCatch && angleToBall >= -angle / 2 && angleToBall <= angle / 2)
-    //    {
-    //        Debug.Log("CATCHED" + canCatch);
-    //        ball.GrabBall(this.transform);
-    //        canCatch = false;
-    //    }
-          
-    //}
-
-
-    //-------------------------------------------------------------------
-
-    //public TcpClientController TcpClientController;
-    //public bool Playable;
-
-    //private Vector3 _oldPosition;
-    //private float _horizontal;
-    //private float _vertical;
-
-    ////void Update()
-    ////{
-    ////    if (!Playable) return;
-
-    ////    _horizontal = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
-    ////    _vertical = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
-    ////}
-
-    //void FixedUpdate()
-    //{
-    //    if (!Playable) return;
-
-    //    transform.Translate(_horizontal, 0, _vertical);
-
-    //    if (transform.position != _oldPosition)
-    //    {
-    //        Message msg = new Message();
-    //        msg.MessageType = MessageType.PlayerMovement;
-    //        PlayerInfo info = new PlayerInfo();
-    //        info.Id = TcpClientController.Player.Id;
-    //        info.Name = TcpClientController.Player.Name;
-    //        info.X = transform.position.x;
-    //        info.Y = transform.position.y;
-    //        info.Z = transform.position.z;
-    //        msg.PlayerInfo = info;
-    //        TcpClientController.SendMessage(msg);
-    //    }
-
-    //    _oldPosition = transform.position;
-    //}
 }

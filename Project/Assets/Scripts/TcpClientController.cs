@@ -19,11 +19,7 @@ public class TcpClientController : MonoBehaviour
     public Dictionary<Guid, GameObject> _balls;
     public Dictionary<Guid?, GameObject> _playerGameObjectDict;
 
-
-    //[SerializeField] GameObject ball;
-
     [SerializeField] ChangeTurn changeTurn;
-
 
     public GameObject SpawPoint;
     public GameObject PlayerPrefab;
@@ -39,12 +35,6 @@ public class TcpClientController : MonoBehaviour
         _playerGameObjectDict = new Dictionary<Guid?, GameObject>();
         Player.GameState = GameState.Disconnected;
         Player.TcpClient = new TcpClient();
-
-
-    }
-    void Start()
-    {
-
     }
 
     void Update()
@@ -82,118 +72,129 @@ public class TcpClientController : MonoBehaviour
         if (Player.DataAvailable())
         {
             Message message = ReceiveMessage();
-            if (message.MessageType == MessageType.NewPlayer)
+
+            switch (message.MessageType)
             {
-                GameObject playerGameObject = Instantiate(PlayerPrefab,
+                case MessageType.NewPlayer:
+                    ReadNewPlayerMessage(message);
+                    break;
+                case MessageType.PlayerMovement:
+                    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) && message.PlayerInfo.Id != Player.Id)
+                        ReadPlayerMovementMessage(message);
+                    break;
+                case MessageType.BallMovement:
+                    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) && message.PlayerInfo.Id != Player.Id)
+                        ReadBallMovementMessage(message);
+                    break;
+                case MessageType.EndGame:
+                    ReadEndGameMessage(message);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    // Reads New Player Message
+    private void ReadNewPlayerMessage(Message message)
+    {
+        GameObject playerGameObject = Instantiate(PlayerPrefab,
                     new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z),
                     Quaternion.identity);
 
+        playerGameObject.GetComponent<PlayerUiController>().PlayerName.text = message.PlayerInfo.Name;
+        playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
 
-                //playerGameObject.SetActive(true);
+        _playerGameObjectDict.Add(message.PlayerInfo.Id, playerGameObject);
 
+        playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
+        _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
 
+        playerGameObject.name = message.PlayerInfo.Id.ToString();
+        playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
+    }
 
-                playerGameObject.GetComponent<PlayerUiController>().PlayerName.text =
-                    message.PlayerInfo.Name;
-                playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
-
-
-                _playerGameObjectDict.Add(message.PlayerInfo.Id, playerGameObject);
-
-                playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
-                _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
-
-                playerGameObject.name = message.PlayerInfo.Id.ToString();
-                playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
-                //changeTurn.AddNewPlayer();
-            }
-            else if (message.MessageType == MessageType.PlayerMovement)
-            {
-                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
-                    message.PlayerInfo.Id != Player.Id)
-                {
-
-                    _playerGameObjectDict[message.PlayerInfo.Id].transform.position =
+    // Reads Player Movement Message
+    private void ReadPlayerMovementMessage(Message message)
+    {
+        _playerGameObjectDict[message.PlayerInfo.Id].transform.position =
                         new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
 
-                    _playerGameObjectDict[message.PlayerInfo.Id].transform.rotation = Quaternion.Euler(
-                        message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-                    //new Vector3(message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-                }
-            }
-            else if (message.MessageType == MessageType.BallMovement)
-            {
-                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
+        _playerGameObjectDict[message.PlayerInfo.Id].transform.rotation = Quaternion.Euler(
+           message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
+    }
+
+    // Reads Ball Movement Message
+    private void ReadBallMovementMessage(Message message)
+    {
+        GameObject ballToMove = _balls[message.PlayerInfo.BallId];
+
+        ballToMove.transform.position = new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
+
+        ballToMove.transform.rotation = Quaternion.Euler(
+        message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
+
+        _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
+    }
+
+    // Reads End Game Message 
+    private void ReadEndGameMessage(Message message)
+    {
+        if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
                     message.PlayerInfo.Id != Player.Id)
-                {
-
-                    GameObject ballToMove = _balls[message.PlayerInfo.BallId];
-                    Debug.Log("nome da bola " + ballToMove.name + "ball id " + message.PlayerInfo.BallId);
-
-
-                    ballToMove.transform.position = new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
-
-                    ballToMove.transform.rotation = Quaternion.Euler(
-                    message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-
-                    _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
-
-
-
-                    //if (message.PlayerInfo.ParentId == null) ballToMove.transform.parent = null;
-                    //else
-                    //{
-                    //    ballToMove.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
-                    //}
-
-                }
-            }
-            else if (message.MessageType == MessageType.EndGame)
+        {
+            foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
             {
-                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
-                    message.PlayerInfo.Id != Player.Id)
-                {
-                    //_playerGameObjectDict[Player.Id].GetComponentInChildren<Text>().text = "You Lost";
-                    //_playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = "You WON";
-
-                    foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
-                    {
-                        if (client.Key != message.PlayerInfo.Id) _playerGameObjectDict[client.Key].GetComponentInChildren<Text>().text = "You Lost";
-                    }
-
-                    _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = "You WON";
-                    StartCoroutine(ReloadGame());
-                }
-                else
-                {
-                    foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
-                    {
-                        if (client.Key != Player.Id) _playerGameObjectDict[client.Key].GetComponentInChildren<Text>().text = "You Lost";
-                    }
-
-                    _playerGameObjectDict[Player.Id].GetComponentInChildren<Text>().text = "You WON";
-                    StartCoroutine(ReloadGame());
-                }
+                if (client.Key != message.PlayerInfo.Id) _playerGameObjectDict[client.Key].GetComponentInChildren<Text>().text = "You Lost";
             }
-            //else if (message.MessageType == MessageType.ChangeTurn)
-            //{
 
-            //    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
-            //        message.PlayerInfo.Id != Player.Id)
-            //    {
-            //        Debug.Log("vaitefoderpaulo");
-            //        ChangeTurn.isCurrentTurn = true;
-            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[Player.Id].transform);
-
-            //    }
-            //    else
-            //    {
-            //        ChangeTurn.isCurrentTurn = false;
-            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[message.PlayerInfo.Id].transform);
-
-            //    }
-            //}
+            _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = "You WON";
+            StartCoroutine(ReloadGame());
         }
+        else
+        {
+            foreach (KeyValuePair<Guid?, GameObject> client in _playerGameObjectDict)
+            {
+                if (client.Key != Player.Id) _playerGameObjectDict[client.Key].GetComponentInChildren<Text>().text = "You Lost";
+            }
+
+            _playerGameObjectDict[Player.Id].GetComponentInChildren<Text>().text = "You WON";
+            StartCoroutine(ReloadGame());
+        }
+    }
+
+
+    private void ReadFinishedSyncMessage(Message message)
+    {
+        // Disables Connect UI
+        ConnectionUI.SetActive(false);
+
+        // Instantiates Playable Player and setups variable initialization
+        GameObject playerGameObject =
+            Instantiate(PlayerPrefab, SpawPoint.transform.position, Quaternion.identity);
+        playerGameObject.GetComponent<PlayerMovement>().tcpClientController = this;
+        playerGameObject.GetComponent<PlayerMovement>().Playable = true;
+        playerGameObject.GetComponent<PlayerMovement>().enabled = true;
+        playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
+        playerGameObject.GetComponent<PlayerUiController>().PlayerName.text = Player.Name;
+
+        playerGameObject.GetComponentInChildren<Ball>().TcpClientController = this;
+        playerGameObject.GetComponentInChildren<Ball>().changeTurn = playerGameObject.GetComponentInChildren<ChangeTurn>();
+
+        playerGameObject.GetComponentInChildren<ChangeTurn>().tcpClientController = this;
+        playerGameObject.GetComponentInChildren<ChangeTurn>().myScore = playerGameObject.GetComponentInChildren<Text>();
+
+
+        playerGameObject.GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
+
+
+        _playerGameObjectDict.Add(Player.Id, playerGameObject);
+
+        playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
+        _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
+
+        Player.GameState = GameState.GameStarted;
     }
 
     private void Sync()
@@ -202,126 +203,24 @@ public class TcpClientController : MonoBehaviour
         {
             Message message = ReceiveMessage();
 
-            // processar messages NewPlayer
-            if (message.MessageType == MessageType.NewPlayer)
+            switch (message.MessageType)
             {
-                GameObject playerGameObject = Instantiate(PlayerPrefab,
-                    new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z),
-                    Quaternion.identity);
-
-
-                //playerGameObject.SetActive(true);
-
-                playerGameObject.GetComponent<PlayerUiController>().PlayerName.text
-                    = message.PlayerInfo.Name;
-                playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
-
-                _playerGameObjectDict.Add(message.PlayerInfo.Id, playerGameObject);
-
-                playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
-                _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
-
-                playerGameObject.name = message.PlayerInfo.Id.ToString();
-                playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
-
-                //changeTurn.AddNewPlayer();
-            }
-            // processar messages PlayerMovement
-            else if (message.MessageType == MessageType.PlayerMovement)
-            {
-                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id))
-                {
-                    Debug.Log("num" + _playerGameObjectDict.Count);
-
-                    _playerGameObjectDict[message.PlayerInfo.Id].transform.position =
-                        new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
-
-                    //_playerGameObjectDict[message.PlayerInfo.Id].transform.eulerAngles =
-                    //    new Vector3(message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-
-                    _playerGameObjectDict[message.PlayerInfo.Id].transform.rotation = Quaternion.Euler(
-                       message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-                }
-            }
-            //
-            else if (message.MessageType == MessageType.BallMovement)
-            {
-                if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
-                    message.PlayerInfo.Id != Player.Id)
-                {
-
-                    GameObject ballToMove = _balls[message.PlayerInfo.BallId];
-
-
-                    ballToMove.transform.position = new Vector3(message.PlayerInfo.X, message.PlayerInfo.Y, message.PlayerInfo.Z);
-
-                    ballToMove.transform.rotation = Quaternion.Euler(
-                    message.PlayerInfo.directionX, message.PlayerInfo.directionY, message.PlayerInfo.directionZ);
-
-                    _playerGameObjectDict[message.PlayerInfo.Id].GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
-
-                    //if (message.PlayerInfo.ParentId == null) ballToMove.transform.parent = null;
-                    //else
-                    //{
-                    //    //Guid temp = (Guid)message.PlayerInfo.ParentId;
-                    //    ballToMove.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
-
-                    //}
-
-                }
-            }
-            //else if (message.MessageType == MessageType.ChangeTurn)
-            //{
-            //    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) &&
-            //        message.PlayerInfo.Id != Player.Id)
-            //    {
-            //        ChangeTurn.isCurrentTurn = true;
-            //        //ball.transform.parent = _playerGameObjectDict[message.PlayerInfo.Id].transform;
-            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[Player.Id].transform);
-
-            //    }else
-            //    {
-            //        ChangeTurn.isCurrentTurn = false;
-            //        ball.GetComponent<Ball>().SetNewParent(_playerGameObjectDict[message.PlayerInfo.Id].transform);
-
-            //    }
-            //}
-
-
-            else if (message.MessageType == MessageType.FinishedSync)
-            {
-
-                ConnectionUI.SetActive(false);
-                GameObject playerGameObject =
-                    Instantiate(PlayerPrefab, SpawPoint.transform.position, Quaternion.identity);
-                playerGameObject.GetComponent<PlayerMovement>().tcpClientController = this;
-                playerGameObject.GetComponent<PlayerMovement>().Playable = true;
-                playerGameObject.GetComponent<PlayerMovement>().enabled = true;
-                playerGameObject.GetComponentInChildren<Ball>().parentPlayer = playerGameObject.transform;
-                playerGameObject.GetComponent<PlayerUiController>().PlayerName.text = Player.Name;
-
-                playerGameObject.GetComponentInChildren<Ball>().TcpClientController = this;
-                playerGameObject.GetComponentInChildren<Ball>().changeTurn = playerGameObject.GetComponentInChildren<ChangeTurn>();
-
-                playerGameObject.GetComponentInChildren<ChangeTurn>().tcpClientController = this;
-                playerGameObject.GetComponentInChildren<ChangeTurn>().myScore = playerGameObject.GetComponentInChildren<Text>();
-
-
-                playerGameObject.GetComponentInChildren<Text>().text = message.PlayerInfo.Score.ToString();
-
-                Debug.Log(message.PlayerInfo);
-
-                _playerGameObjectDict.Add(Player.Id, playerGameObject);
-
-                playerGameObject.GetComponentInChildren<Ball>().BallId = message.PlayerInfo.BallId; // ball
-                _balls.Add(message.PlayerInfo.BallId, playerGameObject.GetComponentInChildren<Ball>().gameObject);
-
-                //
-                playerGameObject.name = message.PlayerInfo.Id.ToString();
-                playerGameObject.GetComponentInChildren<Ball>().gameObject.name = message.PlayerInfo.BallId.ToString();
-                //
-
-                Player.GameState = GameState.GameStarted;
+                case MessageType.NewPlayer:
+                    ReadNewPlayerMessage(message);
+                    break;
+                case MessageType.PlayerMovement:
+                    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id))
+                        ReadPlayerMovementMessage(message);
+                    break;
+                case MessageType.BallMovement:
+                    if (_playerGameObjectDict.ContainsKey(message.PlayerInfo.Id) && message.PlayerInfo.Id != Player.Id)
+                        ReadBallMovementMessage(message);
+                    break;
+                case MessageType.FinishedSync:
+                    ReadFinishedSyncMessage(message);
+                    break;
+                default:
+                    break;
             }
         }
     }

@@ -17,10 +17,10 @@ namespace Common
 
         public int Score { get; set; }
 
-        //--
-        public float directionX { get; set; } // NOT USED
+        
+        public float directionX { get; set; }
         public float directionY { get; set; }
-        public float directionZ { get; set; } // NOT USED
-        //--
+        public float directionZ { get; set; }
+      
     }
 }

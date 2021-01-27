@@ -10,9 +10,8 @@ namespace Common
         PlayerName,
         NewPlayer,
         PlayerMovement,
-        BallMovement, //
-        ChangeTurn,  //
-        EndGame,    //
+        BallMovement, 
+        EndGame,    
         FinishedSync,
         Information,
         Warning,
